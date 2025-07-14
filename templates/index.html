@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Welcome to the Attendance System</h1>
+    <form action="/register" method="post" enctype="multipart/form-data">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="department" placeholder="Department" required>
+        <input type="text" name="position" placeholder="Position">
+        <input type="text" name="phone" placeholder="Phone Number">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Register</button>
+    </form>
+    <form action="/capture" method="post">
+        <button type="submit">Capture Attendance</button>
+    </form>
+</body>
+</html>
+
