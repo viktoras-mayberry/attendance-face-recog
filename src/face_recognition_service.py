@@ -1,4 +1,3 @@
-import face_recognition
 import cv2
 import numpy as np
 import os
@@ -9,10 +8,20 @@ from PIL import Image
 import sys
 import os
 
+# Try to import face_recognition, fallback to mock if not available
+try:
+    import face_recognition
+    print("Face recognition service using real face_recognition library")
+except ImportError:
+    print("face_recognition not available, using mock version")
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'utils'))
+    import mock_face_recognition as face_recognition
+
 # Add parent directory to path to import modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database.models import db, User, FaceEncoding, AttendanceRecord, SystemLog
+from database.models import db, User, FaceEncoding, AttendanceRecord, SystemLog, AttendanceStatus, OfficeLocation
+from utils.location_utils import get_location_info
 from config.config import Config
 from utils.image_utils import preprocess_image, validate_face_image
 
@@ -164,8 +173,8 @@ class FaceRecognitionService:
             self._log_system_event("ERROR", f"Error adding face for user {user_id}: {str(e)}", "FaceRecognitionService", user_id)
             return False
     
-    def mark_attendance(self, user_id, status='IN', confidence=0.0, image_path=None):
-        """Mark attendance for a user"""
+    def mark_attendance(self, user_id, status='IN', confidence=0.0, image_path=None, location_valid=False, request=None):
+        """Mark attendance for a user with location validation"""
         try:
             user = User.query.get(user_id)
             if not user:
@@ -181,19 +190,30 @@ class FaceRecognitionService:
                 logger.warning(f"Duplicate attendance attempt for user {user.name} within buffer time")
                 return False
             
-            # Create attendance record
+            # Get location information if request is provided
+            location_info = {}
+            if request:
+                location_info = get_location_info(request)
+            
+            # Create attendance record with location data
             attendance = AttendanceRecord(
                 user_id=user_id,
-                status=status,
+                status=AttendanceStatus.IN if status == 'IN' else AttendanceStatus.OUT,
                 confidence=confidence,
-                image_path=image_path
+                image_path=image_path,
+                location_latitude=location_info.get('latitude'),
+                location_longitude=location_info.get('longitude'),
+                ip_address=location_info.get('ip_address'),
+                user_agent=location_info.get('user_agent'),
+                is_valid_location=location_valid,
+                location_name=location_info.get('nearest_office')
             )
             
             db.session.add(attendance)
             db.session.commit()
             
-            logger.info(f"Marked attendance for {user.name} - Status: {status}, Confidence: {confidence:.2f}")
-            self._log_system_event("INFO", f"Attendance marked for {user.name} - {status}", "FaceRecognitionService", user_id)
+            logger.info(f"Marked attendance for {user.name} - Status: {status}, Confidence: {confidence:.2f}, Location Valid: {location_valid}")
+            self._log_system_event("INFO", f"Attendance marked for {user.name} - {status} (Location: {location_valid})", "FaceRecognitionService", user_id)
             
             return True
             

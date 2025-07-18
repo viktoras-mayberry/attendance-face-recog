@@ -1,16 +1,31 @@
 # Face Recognition Attendance System
 
-A Flask-based web application for managing employee attendance using face recognition technology.
+A comprehensive Flask-based web application for managing student and employee attendance using advanced face recognition technology, location validation, and administrative controls.
 
-## Features
+## 🚀 Key Features
 
-- **Employee Registration**: Register new employees with face images
-- **Face Recognition**: Automatic face detection and recognition
-- **Attendance Tracking**: Mark attendance with face recognition
-- **Real-time Camera Integration**: Capture attendance using webcam
-- **Database Management**: Store employee data and attendance records
-- **Quality Validation**: Validate face image quality during registration
-- **Duplicate Prevention**: Prevent duplicate attendance entries
+### Core Functionality
+- **Multi-User System**: Supports both students and employees with different registration flows
+- **Advanced Face Recognition**: Automatic face detection and recognition with confidence scoring
+- **Location-Based Attendance**: GPS-based location validation for attendance marking
+- **Real-time Camera Integration**: Capture attendance using webcam or mobile camera
+- **Quality Validation**: Comprehensive face image quality assessment during registration
+- **Duplicate Prevention**: Intelligent duplicate attendance prevention with buffer time
+
+### Administrative Features
+- **Multi-Level Admin System**: Super admin and view-only admin roles
+- **Student Management**: Complete student registration and profile management
+- **Attendance Analytics**: Weekly attendance tracking and analytics
+- **Location Management**: Define and manage valid attendance locations
+- **Clearance System**: Attendance-based clearance level management
+- **Notification System**: Email and SMS notifications for attendance reports
+- **Data Export**: CSV export functionality for attendance records
+
+### Security & Validation
+- **Secure Authentication**: Password hashing and session management
+- **Role-Based Access Control**: Different access levels for students and admins
+- **Image Quality Assessment**: Automatic face image quality scoring
+- **Location Validation**: GPS-based attendance location verification
 
 ## Technology Stack
 
@@ -150,38 +165,116 @@ CAMERA_WIDTH = 640      # Camera width
 CAMERA_HEIGHT = 480     # Camera height
 ```
 
-## API Endpoints
+## 🔌 API Endpoints
 
-- `GET /` - Home page
-- `POST /register` - Register new employee
-- `POST /capture` - Capture attendance
+### Authentication
+- `GET /login` - Login page
+- `POST /login` - Process login (student/admin)
+- `GET /logout` - Logout user
+
+### Student Routes
+- `GET /register` - Student registration page
+- `POST /register` - Process student registration
+- `GET /profile` - Student profile page
+- `POST /profile` - Update student profile
 - `GET /attendance` - Attendance capture page
+- `POST /attendance` - Process attendance marking
+- `GET /profile/export_csv` - Export student attendance CSV
 
-## Database Models
+### Admin Routes
+- `GET /admin` - Admin dashboard
+- `GET /admin/create` - Create new admin (super admin only)
+- `POST /admin/create` - Process admin creation
+- `GET /admin/locations` - Manage office locations
+- `POST /admin/locations` - Add/remove office locations
+- `POST /admin/send_weekly_report` - Send weekly email reports
+- `POST /admin/send_weekly_sms` - Send weekly SMS reports
+- `GET /admin/export_csv` - Export admin attendance CSV
+
+### System Routes
+- `GET /` - Home page (requires login)
+- `POST /capture` - Camera-based attendance capture
+- `POST /register_employee` - Register new employee
+
+## 🗄️ Database Models
 
 ### User Model
 - `id`: Primary key
-- `employee_id`: Unique employee identifier
-- `name`: Employee name
-- `email`: Employee email
-- `department`: Employee department
-- `position`: Employee position
-- `phone`: Employee phone number
-- `is_active`: Employee status
+- `student_id`: Unique student identifier
+- `name`: Student/Employee name
+- `email`: Email address
+- `state_code`: State code (for students)
+- `ppa`: PPA information (for students)
+- `cds_group`: CDS group (for students)
+- `phone`: Phone number
+- `password_hash`: Hashed password
+- `is_active`: Active status
+- `created_at`: Creation timestamp
+- `updated_at`: Last update timestamp
+
+### Admin Model
+- `id`: Primary key
+- `name`: Admin name
+- `email`: Email address
+- `phone`: Phone number
+- `password_hash`: Hashed password
+- `role`: Admin role (super_admin/view_only)
+- `is_active`: Active status
 
 ### FaceEncoding Model
 - `id`: Primary key
 - `user_id`: Foreign key to User
-- `encoding_data`: Face encoding data
+- `encoding_data`: Face encoding data (JSON)
 - `image_path`: Path to face image
 - `quality_score`: Face image quality score
+- `is_primary`: Primary encoding flag
 
 ### AttendanceRecord Model
 - `id`: Primary key
 - `user_id`: Foreign key to User
 - `timestamp`: Attendance timestamp
-- `status`: Attendance status ('IN'/'OUT')
+- `status`: Attendance status (IN/OUT/BREAK/LUNCH)
 - `confidence`: Recognition confidence score
+- `location_latitude`: GPS latitude
+- `location_longitude`: GPS longitude
+- `location_name`: Location name
+- `is_valid_location`: Location validation flag
+
+### OfficeLocation Model
+- `id`: Primary key
+- `name`: Location name
+- `address`: Physical address
+- `latitude`: GPS latitude
+- `longitude`: GPS longitude
+- `radius`: Valid radius in meters
+- `is_active`: Active status
+- `required_clearance_level`: Required clearance level
+
+### ClearanceRecord Model
+- `id`: Primary key
+- `user_id`: Foreign key to User
+- `week_start`: Week start date
+- `week_end`: Week end date
+- `attendance_count`: Weekly attendance count
+- `required_count`: Required attendance count
+- `clearance_granted`: Clearance status
+- `clearance_level`: Clearance level
+
+### SystemLog Model
+- `id`: Primary key
+- `timestamp`: Log timestamp
+- `level`: Log level (INFO/WARNING/ERROR)
+- `message`: Log message
+- `module`: Source module
+- `user_id`: Associated user ID
+
+### NotificationLog Model
+- `id`: Primary key
+- `user_id`: Target user ID
+- `type`: Notification type (email/sms)
+- `recipient`: Recipient address
+- `message`: Notification message
+- `status`: Delivery status
 
 ## Troubleshooting
 

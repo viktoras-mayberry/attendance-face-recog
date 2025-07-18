@@ -1,20 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Capture</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <h1>Attendance Capture</h1>
-    <div id="camera-container">
-        <video id="camera" autoplay></video>
-        <canvas id="canvas" style="display:none;"></canvas>
+{% extends 'index.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4>Mark Attendance</h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="alert alert-info">
+                                {{ messages[0] }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    <form id="attendanceForm" method="POST" action="{{ url_for('attendance') }}" enctype="multipart/form-data">
+                        <div class="mb-3 text-center">
+                            <video id="video" width="320" height="240" autoplay></video>
+                            <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+                        </div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <input type="hidden" id="image_data" name="image_data">
+                        <div class="mb-3 text-center">
+                            <button type="button" class="btn btn-primary" id="captureBtn">Capture Photo</button>
+                        </div>
+                        <div class="mb-3 text-center">
+                            <button type="submit" class="btn btn-success" id="submitBtn" disabled>Mark Attendance</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <button id="capture-btn">Capture Attendance</button>
-    <a href="/">Back to Home</a>
-    
-    <script src="/static/js/camera.js"></script>
-</body>
-</html>
+</div>
+<script>
+    // Camera setup
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const imageDataInput = document.getElementById('image_data');
+    // Get user media
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { alert('Camera access denied: ' + err); });
+    // Capture photo
+    captureBtn.onclick = function() {
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL('image/png');
+        imageDataInput.value = dataURL;
+        submitBtn.disabled = false;
+        alert('Photo captured! You can now mark attendance.');
+    };
+    // Geolocation
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+        }, function(error) {
+            alert('Geolocation error: ' + error.message);
+        });
+    } else {
+        alert('Geolocation is not supported by this browser.');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Admin Dashboard</h2>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Attendance This Week</h5>
+                    <p class="display-6">{{ total_attendance }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Students with Low Attendance</h5>
+                    <p class="display-6">{{ low_attendance_students|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Attendance Trend (Last 4 Weeks)</h5>
+                    <ul class="list-unstyled">
+                        {% for t in trends %}
+                        <li>{{ t.week }}: {{ t.count }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>All Students - Weekly Attendance</h5>
+            <a href="{{ url_for('export_admin_attendance_csv') }}" class="btn btn-outline-primary">Download Weekly Attendance (CSV)</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>State Code</th>
+                        <th>PPA</th>
+                        <th>CDs Group</th>
+                        <th>Weekly Attendance</th>
+                        <th>Clearance</th>
+                        {% if is_super_admin %}<th>Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in attendance_data %}
+                    <tr>
+                        <td>{{ d.student.name }}</td>
+                        <td>{{ d.student.email }}</td>
+                        <td>{{ d.student.state_code }}</td>
+                        <td>{{ d.student.ppa }}</td>
+                        <td>{{ d.student.cds_group }}</td>
+                        <td>{{ d.weekly_attendance }}</td>
+                        <td>
+                            {% if d.clearance_status.clearance_granted %}
+                                <span class="badge bg-success">Granted</span>
+                            {% else %}
+                                <span class="badge bg-danger">Not Granted</span>
+                            {% endif %}
+                        </td>
+                        {% if is_super_admin %}
+                        <td>
+                            <a href="#" class="btn btn-sm btn-primary disabled">Edit</a>
+                            <a href="#" class="btn btn-sm btn-danger disabled">Remove</a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="mb-3">
+        {% if is_super_admin %}
+        <a href="{{ url_for('admin_create') }}" class="btn btn-success">Create New Admin</a>
+        <form method="POST" action="{{ url_for('send_weekly_report') }}" style="display:inline;">
+            <button type="submit" class="btn btn-info">Send Weekly Report to All Students</button>
+        </form>
+        <form method="POST" action="{{ url_for('send_weekly_sms') }}" style="display:inline;">
+            <button type="submit" class="btn btn-warning">Send Weekly SMS to All Students</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+    </div>
+</div>
+{% endblock %}
+

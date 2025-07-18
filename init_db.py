@@ -11,13 +11,13 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from flask import Flask
-from config.config import config
-from database.models import db, User, FaceEncoding, AttendanceRecord, SystemLog
+from config.config import config as app_config
+from database.models import db, User, Admin, FaceEncoding, AttendanceRecord, OfficeLocation, ClearanceRecord, SystemLog, NotificationLog
 
 def create_app():
     """Create and configure the Flask application."""
     app = Flask(__name__)
-    app.config.from_object(config['development'])
+    app.config.from_object(app_config['development'])
     db.init_app(app)
     return app
 
